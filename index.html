@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="tr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Binance API — Canlı Fiyat (Vanilla JS)</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+
+  <body>
+    <div class="wrap">
+      <header>
+        <div class="title">Binance API — Canlı Fiyat & 24s İstatistik</div>
+        <!-- sağ üstteki pill kaldırıldı -->
+      </header>
+
+      <div class="row">
+        <!-- ANA PANEL (SOL) -->
+        <section class="card">
+          <div class="controls" style="margin-bottom: 12px">
+            <select id="symbolSelect" aria-label="Sembol seç">
+              <option value="BTCUSDT">BTCUSDT</option>
+              <option value="ETHUSDT">ETHUSDT</option>
+              <option value="BNBUSDT">BNBUSDT</option>
+              <option value="SOLUSDT">SOLUSDT</option>
+              <option value="XRPUSDT">XRPUSDT</option>
+            </select>
+            <input id="customSymbol" placeholder="Örn: AVAXUSDT" />
+            <button id="apply">Uygula</button>
+            <button id="refresh">Yenile</button>
+            <label class="pill">
+              <input type="checkbox" id="auto" />
+              <span id="autoLbl">Otomatik yenile (5 sn)</span>
+            </label>
+            <span class="badge" id="status">Hazır</span>
+          </div>
+
+          <div
+            id="head"
+            style="
+              display: flex;
+              align-items: end;
+              gap: 14px;
+              justify-content: space-between;
+            "
+          >
+            <div>
+              <div class="muted">Sembol</div>
+              <div style="display: flex; align-items: center; gap: 8px">
+                <h1 id="symbol" style="margin: 6px 0 0 0">BTCUSDT</h1>
+                <span class="badge" id="exchange">api.binance.com</span>
+              </div>
+            </div>
+            <div style="text-align: right">
+              <div class="muted">Güncel Fiyat</div>
+              <div class="price" id="price">—</div>
+            </div>
+          </div>
+
+          <svg
+            class="spark"
+            viewBox="0 0 500 100"
+            preserveAspectRatio="none"
+            id="spark"
+          ></svg>
+
+          <div id="stats">
+            <div class="stat">
+              <div class="k">24s Değişim</div>
+              <div></div>
+              <div id="change" class="diff">—</div>
+            </div>
+            <div class="stat">
+              <div class="k">24s En Yüksek</div>
+              <div></div>
+              <div id="high">—</div>
+            </div>
+            <div class="stat">
+              <div class="k">24s En Düşük</div>
+              <div></div>
+              <div id="low">—</div>
+            </div>
+            <div class="stat">
+              <div class="k">24s Hacim (Base)</div>
+              <div></div>
+              <div id="vol">—</div>
+            </div>
+            <div class="stat">
+              <div class="k">Son Güncelleme</div>
+              <div></div>
+              <div id="updated" class="muted">—</div>
+            </div>
+          </div>
+
+          <!-- SIK KULLANILANLAR (SOL KARTA TAŞINDI) -->
+          <h3 style="margin: 16px 0 8px 0">Sık Kullanılanlar</h3>
+          <div id="quick" class="controls" style="margin: 6px 0 14px 0">
+            <button data-sym="BTCUSDT">BTC</button>
+            <button data-sym="ETHUSDT">ETH</button>
+            <button data-sym="BNBUSDT">BNB</button>
+            <button data-sym="SOLUSDT">SOL</button>
+            <button data-sym="AVAXUSDT">AVAX</button>
+          </div>
+          <p class="muted" style="margin: 0 0 10px 0">
+            İpucu: Metin kutusuna <span class="kbd">XMRUSDT</span> yazıp
+            <b>Uygula</b>.
+          </p>
+
+          <div class="footer" style="margin-top: 8px">
+            Kaynak: <span class="kbd">/api/v3/ticker/24hr</span> ve
+            <span class="kbd">/api/v3/klines</span> (1m, limit=60). Oran
+            limitine saygı için istekler arası küçük gecikme uygulanır.
+          </div>
+        </section>
+
+        <!-- SAĞ PANEL -->
+        <aside style="display: grid; gap: 16px">
+          <!-- FAVORİLER / PORTFÖY -->
+          <section class="card" id="favCard">
+            <div
+              style="
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 8px;
+                margin-bottom: 8px;
+              "
+            >
+              <h3 style="margin: 0">Favorilerim</h3>
+              <span class="pill" id="favInfo">Yerel kayıt (localStorage)</span>
+            </div>
+
+            <div class="controls" style="margin-bottom: 10px">
+              <input
+                id="favSymbol"
+                placeholder="Sembol (örn: BTCUSDT)"
+                style="flex: 1 1 160px"
+              />
+              <input
+                id="favQty"
+                placeholder="Miktar (örn: 0.05)"
+                inputmode="decimal"
+                style="width: 140px"
+              />
+              <select id="favSide" style="width: 120px">
+                <option value="BUY">Alış</option>
+                <option value="SELL">Satış</option>
+              </select>
+              <input
+                id="favPrice"
+                placeholder="Birim fiyat"
+                inputmode="decimal"
+                style="width: 140px"
+              />
+              <button id="favAdd">Ekle</button>
+              <button id="favClear" class="danger">Tümünü Sil</button>
+            </div>
+
+            <div class="muted" style="font-size: 12px; margin-bottom: 8px">
+              Eklerken <b>Alış/Satış</b> ve <b>Birim Fiyat</b> gir.
+              <u>Alış</u> için P/L = (Güncel−Alış)×Miktar, <u>Satış</u> için P/L
+              = (Satış−Güncel)×Miktar (satış sonrası sonuç).
+            </div>
+
+            <div
+              class="card"
+              style="
+                background: rgba(255, 255, 255, 0.02);
+                border-color: rgba(255, 255, 255, 0.06);
+                padding: 0;
+              "
+            >
+              <table>
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>Sembol</th>
+                    <th>Tür</th>
+                    <th class="right">Miktar</th>
+                    <th class="right">Ref Fiyatı</th>
+                    <th class="right">Güncel</th>
+                    <th class="right">Fark</th>
+                    <th class="right">P/L</th>
+                    <th class="right">Toplam</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody id="favBody"></tbody>
+                <tfoot>
+                  <tr>
+                    <th colspan="8" class="right">
+                      Piyasa Değeri (Güncel Toplam)
+                    </th>
+                    <th class="right" id="favGrand">—</th>
+                    <th></th>
+                  </tr>
+                  <tr>
+                    <th colspan="8" class="right">
+                      Ref Toplamı (Girilen Fiyat × Miktar)
+                    </th>
+                    <th class="right" id="favRefGrand">—</th>
+                    <th></th>
+                  </tr>
+                  <tr>
+                    <th colspan="8" class="right">Genel P/L</th>
+                    <th class="right" id="favPnlGrand">—</th>
+                    <th></th>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+          </section>
+
+          <!-- LOG -->
+          <section class="card">
+            <h3 style="margin: 0 0 8px 0">Hata Günlüğü</h3>
+
+            <!-- LOG TOOLBAR (aynı) -->
+            <div class="controls" id="logToolbar" style="margin: 8px 0 10px 0">
+              <input
+                id="logSearch"
+                placeholder="Ara (mesaj + meta)"
+                style="flex: 1 1 200px"
+              />
+              <select id="logSrc" style="width: 160px">
+                <option value="ALL">Tüm kaynaklar</option>
+                <option value="HTTP">HTTP</option>
+                <option value="Ticker">Ticker</option>
+                <option value="Spark">Spark</option>
+                <option value="Favorites">Favorites</option>
+                <option value="UI">UI</option>
+              </select>
+              <select id="logSym" style="width: 160px">
+                <option value="ALL">Tüm semboller</option>
+              </select>
+              <label class="pill"
+                ><input type="checkbox" id="lvINFO" checked />INFO</label
+              >
+              <label class="pill"
+                ><input type="checkbox" id="lvWARN" checked />WARN</label
+              >
+              <label class="pill"
+                ><input type="checkbox" id="lvERROR" checked />ERROR</label
+              >
+              <label class="pill"
+                ><input
+                  type="checkbox"
+                  id="logAutoscroll"
+                  checked
+                />Auto-scroll</label
+              >
+              <button id="logPause">Pause</button>
+              <button id="logExport">Export JSON</button>
+              <button id="logClear" class="danger">Clear</button>
+            </div>
+
+            <div id="log" class="log-panel"></div>
+          </section>
+        </aside>
+      </div>
+    </div>
+
+    <script src="script.js"></script>
+  </body>
+</html>

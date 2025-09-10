@@ -29,7 +29,7 @@ body {
 }
 
 .wrap {
-  max-width: 1370px;
+  max-width: 1400px;
   margin: 24px auto;
   padding: 0 16px;
 }
@@ -487,11 +487,11 @@ table input[type="number"] {
   } /* Güncel */
   #favCard th:nth-child(7),
   #favCard td:nth-child(7) {
-    width: 82px;
+    width: 95px;
   } /* Fark */
   #favCard th:nth-child(8),
   #favCard td:nth-child(8) {
-    width: 91px;
+    width: 95px;
   } /* P/L */
   #favCard th:nth-child(9),
   #favCard td:nth-child(9) {

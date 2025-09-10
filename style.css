@@ -29,7 +29,7 @@ body {
 }
 
 .wrap {
-  max-width: 1180px;
+  max-width: 1370px;
   margin: 24px auto;
   padding: 0 16px;
 }
@@ -140,6 +140,7 @@ button:hover {
   font-size: clamp(28px, 6vw, 40px);
   font-weight: 800;
   letter-spacing: 0.2px;
+  line-height: 1.1;
 }
 .diff.up {
   color: var(--good);
@@ -149,6 +150,25 @@ button:hover {
 }
 .muted {
   color: var(--muted);
+}
+
+/* Başlık (Sembol + Güncel Fiyat) hizalama düzeltmesi */
+#head {
+  flex-wrap: wrap;
+  justify-content: flex-start !important; /* inline space-between'i ez */
+}
+
+#head > :last-child {
+  margin-left: auto; /* aynı satırdaysa sağa it */
+  text-align: right; /* metni sağa hizala        */
+}
+
+/* Alt satıra düştüğünde de sağ kenara yanaşsın */
+@media (max-width: 1400px) {
+  #head > :last-child {
+    flex-basis: 100%; /* tek başına bir satır kaplasın */
+    align-self: flex-end;
+  }
 }
 
 /* Sparkline */
@@ -417,7 +437,7 @@ table input[type="number"] {
 /* 1200px+: sol sabit, sağ esnek; log kartı 2 kolonu kaplar; tablo taşmaz */
 @media (min-width: 1200px) {
   .row {
-    grid-template-columns: 435px 894px;
+    grid-template-columns: 430px 1fr;
     align-items: stretch;
   }
   .row > .card {

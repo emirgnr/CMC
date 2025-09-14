@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="tr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>coinMarketCap</title>
+
+    <!-- Bootstrap CSS -->
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+      integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB"
+      crossorigin="anonymous"
+    />
+    <!-- Bootstrap Icons -->
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css"
+    />
+    <link rel="stylesheet" href="style.css" />
+    <meta name="theme-color" content="#0b0f14" />
+  </head>
+
+  <body class="min-vh-100 d-flex flex-column">
+    <header>
+      <div class="container custom-container-xl pt-4">
+        <h1 class="text-start text-light custom-title">
+          Binance API — Canlı Fiyat & 24s İstatistik
+        </h1>
+      </div>
+    </header>
+
+    <div
+      class="container custom-container-xl flex-grow-1 d-flex align-items-stretch pt-2 pb-4"
+    >
+      <div class="row g-4 flex-grow-1 w-100">
+        <!-- Sol uzun kart -->
+        <div class="col-md-4 d-flex">
+          <div class="custom-color w-100 h-md-100">
+            <div
+              class="p-3 p-lg-4 d-flex flex-column gap-3 text-light w-100 overflow-hidden"
+            >
+              <!-- Kontroller -->
+              <button
+                id="btnControllerCollapse"
+                class="btn btn-outline-primary btn-sm button-custom d-md-none"
+                type="button"
+                data-bs-toggle="collapse"
+                data-bs-target="#controllerCollapse"
+                aria-expanded="false"
+                aria-controls="controllerCollapse"
+              >
+                Sembol Değiştir
+              </button>
+
+              <div class="collapse d-md-block" id="controllerCollapse">
+                <form class="row g-2 align-items-end flex-wrap">
+                  <div class="col-sm-4 col-md-6 col-lg-6 col-xxl-4 d-flex">
+                    <select
+                      id="symbolSelect"
+                      class="form-select form-select-sm bg-dark text-light border-secondary custom-select w-100"
+                      aria-label="Sembol seç"
+                    >
+                      <option value="BTCUSDT">BTCUSDT</option>
+                      <option value="ETHUSDT">ETHUSDT</option>
+                      <option value="BNBUSDT">BNBUSDT</option>
+                      <option value="SOLUSDT">SOLUSDT</option>
+                      <option value="XRPUSDT">XRPUSDT</option>
+                    </select>
+                  </div>
+                  <div class="col-sm-4 col-md-6 col-lg-6 col-xxl-4 d-flex">
+                    <input
+                      id="customSymbol"
+                      class="form-control custom-input w-100 textCustomSymbol"
+                      placeholder="Örn: TONUSDT"
+                    />
+                  </div>
+                  <div class="col-sm-2 col-md-6 col-lg-6 col-xxl-2 d-flex">
+                    <button
+                      id="apply"
+                      type="button"
+                      class="btn btn-primary btn-sm w-100 button-custom"
+                    >
+                      Uygula
+                    </button>
+                  </div>
+                  <div class="col-sm-2 col-md-6 col-lg-6 col-xxl-2 d-flex">
+                    <button
+                      id="refresh"
+                      type="button"
+                      class="btn btn-outline-secondary btn-sm w-100 button-custom"
+                    >
+                      Yenile
+                    </button>
+                  </div>
+
+                  <div class="col-12 col-sm-6 col-md-12 col-xxl-6">
+                    <div
+                      class="auto-refresh-switch d-flex align-items-center gap-2"
+                    >
+                      <input class="auto-switch" type="checkbox" id="auto" />
+                      <label
+                        class="auto-label text-muted"
+                        for="auto"
+                        id="autoLbl"
+                        >Otomatik yenile 5 sn</label
+                      >
+                    </div>
+                  </div>
+                  <div class="col-12 col-sm-6 col-md-12 col-xxl-6 text-end">
+                    <span class="custom-badge" id="status"
+                      >INFO: Favori hesap</span
+                    >
+                  </div>
+                </form>
+              </div>
+              <!-- Başlık / Fiyat -->
+              <div
+                id="head"
+                class="d-flex align-items-center justify-content-between gap-3 flex-wrap w-100"
+              >
+                <div
+                  class="d-flex flex-row align-items-end justify-content-between w-100 gap-4"
+                >
+                  <div class="d-flex flex-column min-w-0 w-100">
+                    <div
+                      class="d-flex flex-row flex-wrap justify-content-between w-100 mb-1"
+                    >
+                      <div class="d-flex flex-column" style="min-width: 180px">
+                        <small class="text-muted">Sembol</small>
+                        <h1 id="symbol" class="mb-0"></h1>
+                      </div>
+                      <div
+                        class="d-flex flex-column text-end ms-auto align-items-end"
+                        style="min-width: 180px"
+                      >
+                        <small class="text-muted">Güncel Fiyat</small>
+                        <span
+                          id="price"
+                          class="mb-0 price text-end"
+                          style="line-height: 1"
+                        ></span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Sparkline -->
+              <div>
+                <svg
+                  id="spark"
+                  class="w-100"
+                  viewBox="0 0 500 100"
+                  preserveAspectRatio="none"
+                ></svg>
+              </div>
+
+              <!-- İstatistikler -->
+              <div id="stats" class="mt-2">
+                <div
+                  class="d-flex justify-content-between py-2 border-bottom-dotted"
+                >
+                  <span class="text-muted">24s Değişim</span>
+                  <span id="change" class="text-good">—</span>
+                </div>
+                <div
+                  class="d-flex justify-content-between py-2 border-bottom-dotted"
+                >
+                  <span class="text-muted">24s En Yüksek</span>
+                  <span id="high">—</span>
+                </div>
+                <div
+                  class="d-flex justify-content-between py-2 border-bottom-dotted"
+                >
+                  <span class="text-muted">24s En Düşük</span>
+                  <span id="low">—</span>
+                </div>
+                <div
+                  class="d-flex justify-content-between py-2 border-bottom-dotted"
+                >
+                  <span class="text-muted">24s Hacim (Base)</span>
+                  <span id="vol">—</span>
+                </div>
+                <div class="d-flex justify-content-between py-2">
+                  <span class="text-muted">Son Güncelleme</span>
+                  <span id="updated" class="text-muted">—</span>
+                </div>
+              </div>
+
+              <!-- Sık Kullanılanlar -->
+              <div>
+                <h3 class="h6 mb-2 text-light">Sık Kullanılanlar</h3>
+                <div id="quick" class="d-flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    class="btn btn-outline-secondary btn-sm button-custom"
+                    data-sym="BTCUSDT"
+                  >
+                    BTC
+                  </button>
+                  <button
+                    type="button"
+                    class="btn btn-outline-secondary btn-sm button-custom"
+                    data-sym="ETHUSDT"
+                  >
+                    ETH
+                  </button>
+                  <button
+                    type="button"
+                    class="btn btn-outline-secondary btn-sm button-custom"
+                    data-sym="BNBUSDT"
+                  >
+                    BNB
+                  </button>
+                  <button
+                    type="button"
+                    class="btn btn-outline-secondary btn-sm button-custom"
+                    data-sym="SOLUSDT"
+                  >
+                    SOL
+                  </button>
+                  <button
+                    type="button"
+                    class="btn btn-outline-secondary btn-sm button-custom"
+                    data-sym="AVAXUSDT"
+                  >
+                    AVAX
+                  </button>
+                </div>
+                <p class="text-muted small mt-2 mb-0">
+                  İpucu: Metin kutusuna <span class="kbd">XMRUSDT</span> yazıp
+                  <strong>Uygula</strong>.
+                </p>
+              </div>
+
+              <div class="small text-muted">
+                Kaynak: <span class="kbd">/api/v3/ticker/24hr</span> ve
+                <span class="kbd">/api/v3/klines</span> (1m, limit=60). Oran
+                limitine saygı için istekler arası küçük gecikme uygulanır.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Sağ iki kart -->
+        <div class="col-md-8 d-flex flex-column">
+          <!-- Favoriler Tablosu Kartı -->
+          <div class="custom-color h-65 mb-3">
+            <div class="d-flex flex-column h-100 min-h-0">
+              <div
+                class="p-3 p-lg-4 d-flex flex-column gap-3 flex-grow-1 min-h-0"
+              >
+                <!-- Başlık + Limit / Temizle -->
+                <div class="d-flex align-items-center gap-2">
+                  <h5 class="mb-0">Favorilerim</h5>
+                  <span class="ms-auto small text-secondary"
+                    >Limit dolu ( <span id="favLimit">0/4</span> )</span
+                  >
+                  <button
+                    id="favClearAll"
+                    type="button"
+                    class="btn text-white btn-sm danger"
+                  >
+                    Tümünü Sil
+                  </button>
+                  <!-- XL altında gösterilecek toggle -->
+                  <button
+                    id="favFormToggle"
+                    class="btn btn-outline-primary btn-sm d-md-none ms-2"
+                    type="button"
+                    data-bs-toggle="collapse"
+                    data-bs-target="#favFormCollapse"
+                    aria-expanded="false"
+                    aria-controls="favFormCollapse"
+                  >
+                    Ekle
+                  </button>
+                </div>
+
+                <!-- Ekleme formu (collapse hedefi) -->
+                <div class="collapse d-md-block" id="favFormCollapse">
+                  <form class="row g-2 align-items-end">
+                    <div class="col-12 col-md-4">
+                      <label for="favSymbol" class="form-label small"
+                        >Sembol (örn: BTCUSDT)</label
+                      >
+                      <input
+                        id="favSymbol"
+                        class="form-control form-control-sm custom-input"
+                        placeholder="BTCUSDT"
+                      />
+                    </div>
+                    <div class="col-6 col-md-2">
+                      <label for="favAmount" class="form-label small"
+                        >Miktar</label
+                      >
+                      <input
+                        id="favAmount"
+                        class="form-control form-control-sm custom-input"
+                        placeholder="0.05"
+                        inputmode="decimal"
+                      />
+                    </div>
+                    <div class="col-6 col-md-2">
+                      <label for="favSide" class="form-label small">Tür</label>
+                      <select
+                        id="favSide"
+                        class="form-select form-select-sm custom-select"
+                      >
+                        <option value="buy">Alış</option>
+                        <option value="sell">Satış</option>
+                      </select>
+                    </div>
+                    <div class="col-12 col-md-2">
+                      <label for="favRefPrice" class="form-label small"
+                        >Birim fiyat</label
+                      >
+                      <input
+                        id="favRefPrice"
+                        class="form-control form-control-sm custom-input"
+                        placeholder="Ref fiyat"
+                        inputmode="decimal"
+                      />
+                    </div>
+                    <div class="col-12 col-md-2 d-flex gap-2">
+                      <button
+                        id="favAdd"
+                        type="button"
+                        class="btn btn-primary btn-sm w-100 button-custom"
+                      >
+                        Ekle
+                      </button>
+                    </div>
+                  </form>
+                </div>
+
+                <!-- Bilgilendirme -->
+                <div
+                  class="collapse small text-secondary d-md-block"
+                  id="favFormCollapse"
+                >
+                  Eklerken <u>Alış/Satış</u> ve <u>Birim Fiyat</u> gir.
+                  <strong>Alış</strong> için P/L = (Güncel − Alış) × Miktar,
+                  <strong>Satış</strong> için P/L = (Satış − Güncel) × Miktar.
+                </div>
+
+                <!-- Tablo -->
+                <div class="table-responsive flex-grow-1 overflow-auto">
+                  <table
+                    class="table table-sm align-middle mb-0 table-darkcard"
+                  >
+                    <thead class="thead-muted border-bottom">
+                      <tr>
+                        <th scope="col" class="text-center"></th>
+                        <th class="fw-normal">#</th>
+                        <th class="fw-normal">Sembol</th>
+                        <th class="fw-normal">Tür</th>
+                        <th class="fw-normal text-end miktar-th">Miktar</th>
+                        <th class="fw-normal text-end ref-th">Ref Fiyatı</th>
+                        <th class="fw-normal text-end">Güncel</th>
+                        <th class="fw-normal text-end">Fark</th>
+                        <th class="fw-normal text-end">P/L</th>
+                        <th class="fw-normal text-end">Toplam</th>
+                        <th class="fw-normal text-center">Sil</th>
+                      </tr>
+                    </thead>
+                    <tbody id="favTableBody">
+                      <!-- JS satırları -->
+                    </tbody>
+                    <tfoot class="border-top">
+                      <tr>
+                        <td colspan="8" class="text-secondary">
+                          Piyasa Değeri (Güncel Toplam)
+                        </td>
+                        <td id="sumMarket" class="text-end fw-semibold">$0</td>
+                        <td></td>
+                      </tr>
+                      <tr class="border-top">
+                        <td colspan="8" class="text-secondary">
+                          Ref Toplam (Girilen Fiyat × Miktar)
+                        </td>
+                        <td id="sumRef" class="text-end fw-semibold">$0</td>
+                        <td></td>
+                      </tr>
+                      <tr class="border-top">
+                        <td colspan="8" class="text-secondary">Genel P/L</td>
+                        <td id="sumPL" class="text-end fw-bold">—</td>
+                        <td></td>
+                      </tr>
+                    </tfoot>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- İşlemler Kartı -->
+          <div class="custom-color h-35">
+            <div class="d-flex flex-column h-100 min-h-0">
+              <div
+                class="p-3 p-lg-4 d-flex flex-column gap-3 flex-grow-1 min-h-0"
+              >
+                <div class="d-flex align-items-center gap-2">
+                  <h5 class="mb-0">İşlemler</h5>
+                  <div class="ms-auto"></div>
+                  <button id="logClear" class="btn btn-sm danger text-white">
+                    Temizle
+                  </button>
+                </div>
+
+                <!-- Log listesi -->
+                <div id="logWrap" class="log-wrap flex-grow-1">
+                  <ul id="logList" class="log-list"></ul>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script
+      src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"
+      integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI"
+      crossorigin="anonymous"
+    ></script>
+
+    <!-- (Opsiyonel) ikon seti -->
+    <script
+      src="https://kit.fontawesome.com/fd9a9423f4.js"
+      crossorigin="anonymous"
+    ></script>
+
+    <!-- Uygulama JS'in -->
+    <script src="script.js"></script>
+  </body>
+</html>
